@@ -30,8 +30,8 @@ def index():
     sqlalchemy_statement = select(RolePermission)
     columnname = ['Role ID', 'Role', 'Permission', 'Permission ID']
     data = []
-    with Session(engine_staas) as cursor_staas:
-        for role_permission in cursor_staas.execute(sqlalchemy_statement).scalars():
+    with Session(engine) as cursor:
+        for role_permission in cursor.execute(sqlalchemy_statement).scalars():
             row = [role_permission.role_id, role_permission.role.name,
                    role_permission.permission.name, role_permission.permission_id]
             data.append(row)
@@ -46,19 +46,19 @@ def create():
     """Create returns a form to create a role-permission object"""
     role_permission_form = RolePermissionForm(request.form)
 
-    with Session(engine_staas) as cursor_staas:
-        roles = cursor_staas.execute(select(Role).order_by(Role.name)).scalars()
+    with Session(engine) as cursor:
+        roles = cursor.execute(select(Role).order_by(Role.name)).scalars()
         role_permission_form.role_id.choices = [(r.id, r.name) for r in roles]
 
-        permissions = cursor_staas.execute(select(Permission).order_by(Permission.name)).scalars()
+        permissions = cursor.execute(select(Permission).order_by(Permission.name)).scalars()
         role_permission_form.permission_id.choices = [(p.id, p.name) for p in permissions]
 
         if role_permission_form.validate_on_submit() and request.method == 'POST':
             new_role_permission = role_permission_form.create_role_permission()
 
             try:
-                cursor_staas.add(new_role_permission)
-                cursor_staas.commit()
+                cursor.add(new_role_permission)
+                cursor.commit()
                 msg = f"Succesfully add permission {new_role_permission.role.name} " \
                       f"to role {new_role_permission.permission.name}"
             except IntegrityError as e:
@@ -79,17 +79,17 @@ def delete_role_permission():
     """Delete will open a form to allow deletion of a RolePermission object"""
     delete_role_permission_form = DeleteRolePermissionForm(request.form)
 
-    with Session(engine_staas) as cursor_staas:
+    with Session(engine) as cursor:
         # Select all Roles to fill the form
-        roles = cursor_staas.execute(select(Role).order_by(Role.name)).scalars()
+        roles = cursor.execute(select(Role).order_by(Role.name)).scalars()
         delete_role_permission_form.role_id.choices = [(r.id, r.name) for r in roles]
 
         # Select all Permissions to fill the form
-        permissions = cursor_staas.execute(select(Permission).order_by(Permission.name)).scalars()
+        permissions = cursor.execute(select(Permission).order_by(Permission.name)).scalars()
         delete_role_permission_form.permission_id.choices = [(p.id, p.name) for p in permissions]
 
         if delete_role_permission_form.validate_on_submit() and request.method == 'POST':
-            return delete_role_permission_form.delete(cursor_staas)
+            return delete_role_permission_form.delete(cursor)
 
     return render_template(
         'simple_form.html', form=delete_role_permission_form,
