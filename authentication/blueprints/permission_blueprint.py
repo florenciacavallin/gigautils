@@ -1,16 +1,14 @@
 from flask import Blueprint, redirect, request, render_template, flash
-
+from markupsafe import Markup
+from sqlalchemy.exc import NoResultFound, IntegrityError, ResourceClosedError
+from sqlalchemy.orm import Session
 from gigautils.authentication.authenticate import require_permission
 from gigautils.authentication.objects.Permission import Permission, PermissionForm, DeletePermissionForm, \
     PROTECTED_PERMISSIONS
 from sqlalchemy import select
-from database.giga_engine import engine_staas
-from markupsafe import Markup
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import NoResultFound, IntegrityError, ResourceClosedError
+from database.giga_engine import engine
 
 permission_blueprint = Blueprint('permission_blueprint', __name__, url_prefix='/permission')
-
 
 sidebar = [('Table Maintenance', [('User', '/table_maintenance/user'),
                                   ('User-Role', '/table_maintenance/user_role'),
@@ -19,6 +17,7 @@ sidebar = [('Table Maintenance', [('User', '/table_maintenance/user'),
                                   ('Permission', '/table_maintenance/permission')]),
            ('Permission', [('Index', '/table_maintenance/permission'),
                            ('Add', '/table_maintenance/permission/create'),
+                           ('Edit', '/table_maintenance/permission/edit'),
                            ('Delete', '/table_maintenance/permission/delete')])]
 
 
@@ -30,9 +29,9 @@ def index():
     sqlalchemy_statement = select(Permission)
     columnname = ['ID', 'Name', '']
     data = []
-    with Session(engine_staas) as cursor_staas:
-        for permission in cursor_staas.execute(sqlalchemy_statement).scalars():
-            edit_button = Markup(f"<a class='w3-button w3-small w3-theme-d3 w3-round w3-hover-blue' "
+    with Session(engine) as cursor:
+        for permission in cursor.execute(sqlalchemy_statement).scalars():
+            edit_button = Markup(f"<a class='w3-button w3-small w3-theme-d3 w3-round w3-theme-d5 (w3-theme-dark)' "
                                  f"href='/table_maintenance/permission/edit/{permission.id}'>Edit</a>")
             data.append([permission.id, permission.name, edit_button])
     return render_template('simple_table.html', sidebar=sidebar, title='Permissions',
@@ -46,13 +45,13 @@ def create():
     permission_form = PermissionForm(request.form)
 
     if permission_form.validate_on_submit() and request.method == 'POST':
-        with Session(engine_staas) as cursor_staas:
+        with Session(engine) as cursor:
             new_permission = permission_form.create_permission()
 
             try:
-                cursor_staas.add(new_permission)
-                cursor_staas.commit()
-                msg = f"Succesfully created permission {new_permission.name} with ID {new_permission.id}"
+                cursor.add(new_permission)
+                cursor.commit()
+                msg = f"Successfully created permission {new_permission.name} with ID {new_permission.id}"
             except IntegrityError as e:
                 print(f'Failed to add a Permission, with error: {str(e)}')
                 msg = f"Permission not created: It is likely it already exists, otherwise check the logs"
@@ -75,7 +74,7 @@ def edit(permission_id=None):
     permission_form = PermissionForm(request.form)
     sqlalchemy_statement = select(Permission).where(Permission.id == permission_id)
 
-    with Session(engine_staas) as cursor:
+    with Session(engine) as cursor:
         try:
             permission_to_edit = cursor.execute(sqlalchemy_statement).scalar_one()
         except NoResultFound:
@@ -94,7 +93,7 @@ def edit(permission_id=None):
                 flash(f'The permission with ID {permission_id} can\'t be updated.')
                 return redirect("/table_maintenance/permission/index", code=302)
 
-            msg = f"Succesfully updated permission {permission_to_edit.name} with ID {permission_to_edit.id}"
+            msg = f"Successfully updated permission {permission_to_edit.name} with ID {permission_to_edit.id}"
             flash(msg)
             return redirect("/table_maintenance/permission/index", code=302)
 
@@ -111,14 +110,14 @@ def delete_permission():
     """Delete will open a form to allow deletion of a Permission object"""
     delete_permission_form = DeletePermissionForm(request.form)
 
-    with Session(engine_staas) as cursor_staas:
+    with Session(engine) as cursor:
         # Select all Permissions to fill the form
         sql_stmt = select(Permission).where(Permission.id.not_in(PROTECTED_PERMISSIONS)).order_by(Permission.name)
-        permissions = cursor_staas.execute(sql_stmt).scalars()
+        permissions = cursor.execute(sql_stmt).scalars()
         delete_permission_form.permission_id.choices = [(p.id, p.name) for p in permissions]
 
         if delete_permission_form.validate_on_submit() and request.method == 'POST':
-            return delete_permission_form.delete(cursor_staas)
+            return delete_permission_form.delete(cursor)
 
     return render_template(
         'simple_form.html', form=delete_permission_form,

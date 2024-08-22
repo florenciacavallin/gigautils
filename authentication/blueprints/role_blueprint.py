@@ -6,12 +6,11 @@ from markupsafe import Markup
 from sqlalchemy import select
 
 from gigautils.authentication.objects.RolePermission import RolePermission
-from database.giga_engine import engine_staas
+from database.giga_engine import engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
 role_blueprint = Blueprint('role_blueprint', __name__, url_prefix='/role')
-
 
 sidebar = [('Table Maintenance', [('User', '/table_maintenance/user'),
                                   ('User-Role', '/table_maintenance/user_role'),
@@ -20,6 +19,7 @@ sidebar = [('Table Maintenance', [('User', '/table_maintenance/user'),
                                   ('Permission', '/table_maintenance/permission')]),
            ('Role', [('Index', '/table_maintenance/role'),
                      ('Add', '/table_maintenance/role/create'),
+                     ('Edit', '/table_maintenance/role/edit'),
                      ('Delete', '/table_maintenance/role/delete')])]
 
 
@@ -31,9 +31,9 @@ def index():
     sqlalchemy_statement = select(Role)
     columnname = ['ID', 'Name', '']
     data = []
-    with Session(engine_staas) as cursor_staas:
-        for role in cursor_staas.execute(sqlalchemy_statement).scalars():
-            edit_button = Markup(f"<a class='w3-button w3-small w3-theme-d3 w3-round w3-hover-blue' "
+    with Session(engine) as cursor:
+        for role in cursor.execute(sqlalchemy_statement).scalars():
+            edit_button = Markup(f"<a class='w3-button w3-small w3-theme-d3 w3-theme-d5 (w3-theme-dark)' "
                                  f"href='/table_maintenance/role/edit/{role.id}'>Edit</a>")
             data.append([role.id, role.name, edit_button])
     return render_template('simple_table.html', sidebar=sidebar, title='Roles',
@@ -47,18 +47,18 @@ def create():
     role_form = RoleForm(request.form)
 
     if role_form.validate_on_submit() and request.method == 'POST':
-        with Session(engine_staas) as cursor_staas:
+        with Session(engine) as cursor:
             new_role = role_form.create_role()
 
             try:
-                cursor_staas.add(new_role)
+                cursor.add(new_role)
                 # Flush to retrieve role id
-                cursor_staas.flush()
+                cursor.flush()
                 new_role_permission = RolePermission(role_id=new_role.id, permission_id=1)
                 # Add default permission to new created role
-                cursor_staas.add(new_role_permission)
-                cursor_staas.commit()
-                msg = f"Succesfully created role {new_role.name} with ID {new_role.id}"
+                cursor.add(new_role_permission)
+                cursor.commit()
+                msg = f"Successfully created role {new_role.name} with ID {new_role.id}"
             except IntegrityError as e:
                 print(f'Failed to add a Role, with error: {str(e)}')
                 msg = f"Role not created: It is likely it already exists, otherwise check the logs"
@@ -81,7 +81,7 @@ def edit(role_id=None):
     role_form = RoleForm(request.form)
     sqlalchemy_statement = select(Role).where(Role.id == role_id)
 
-    with Session(engine_staas) as cursor:
+    with Session(engine) as cursor:
         try:
             role_to_edit = cursor.execute(sqlalchemy_statement).scalar_one()
         except NoResultFound:
@@ -96,7 +96,7 @@ def edit(role_id=None):
             cursor.add(role_to_edit)
             cursor.commit()
 
-            msg = f"Succesfully updated role {role_to_edit.name} with ID {role_to_edit.id}"
+            msg = f"Successfully updated role {role_to_edit.name} with ID {role_to_edit.id}"
             flash(msg)
             return redirect("/table_maintenance/role/index", code=302)
 
@@ -112,14 +112,14 @@ def delete():
     """Delete will open a form to allow deletion of a Role object"""
     delete_role_form = DeleteRoleForm(request.form)
 
-    with Session(engine_staas) as cursor_staas:
+    with Session(engine) as cursor:
         # Select all Roles to fill the form
         sql_stmt = select(Role).where(Role.id.not_in(PROTECTED_ROLES)).order_by(Role.name)
-        roles = cursor_staas.execute(sql_stmt).scalars()
+        roles = cursor.execute(sql_stmt).scalars()
         delete_role_form.role_id.choices = [(r.id, r.name) for r in roles]
 
         if delete_role_form.validate_on_submit() and request.method == 'POST':
-            return delete_role_form.delete(cursor_staas)
+            return delete_role_form.delete(cursor)
 
     return render_template(
         'simple_form.html', form=delete_role_form,

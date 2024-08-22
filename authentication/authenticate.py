@@ -11,7 +11,7 @@ from sqlalchemy.exc import NoResultFound
 
 from gigautils.authentication.objects.Permission import Permission
 from gigautils.authentication.objects.User import User
-from database.giga_engine import engine_staas
+from database.giga_engine import engine
 from utils.blueprint_helper import redirect_url
 # Although this import is unused it allows sqlalchemy to find the foreignkey reference
 from gigautils.authentication.objects.Role import Role
