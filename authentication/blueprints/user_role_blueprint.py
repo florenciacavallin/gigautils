@@ -30,8 +30,8 @@ def index():
     sqlalchemy_statement = select(UserRole)
     columnname = ['User ID', 'User', 'Role', 'Role ID']
     data = []
-    with Session(engine_staas) as cursor_staas:
-        for user_role in cursor_staas.execute(sqlalchemy_statement).scalars():
+    with Session(engine) as cursor:
+        for user_role in cursor.execute(sqlalchemy_statement).scalars():
             user = user_role.user.first_name + ' ' + user_role.user.last_name
             row = [user_role.user_id, user, user_role.role.name, user_role.role_id]
             data.append(row)
@@ -45,19 +45,19 @@ def create():
     """Create returns a form to create a user-role object"""
     user_role_form = UserRoleForm(request.form)
 
-    with Session(engine_staas) as cursor_staas:
-        users = cursor_staas.execute(select(User).order_by(User.email)).scalars()
+    with Session(engine) as cursor:
+        users = cursor.execute(select(User).order_by(User.email)).scalars()
         user_role_form.user_id.choices = [(u.id, u.email) for u in users]
 
-        roles = cursor_staas.execute(select(Role).order_by(Role.name)).scalars()
+        roles = cursor.execute(select(Role).order_by(Role.name)).scalars()
         user_role_form.role_id.choices = [(r.id, r.name) for r in roles]
 
         if user_role_form.validate_on_submit() and request.method == 'POST':
             new_user_role = user_role_form.create_user_role()
 
             try:
-                cursor_staas.add(new_user_role)
-                cursor_staas.commit()
+                cursor.add(new_user_role)
+                cursor.commit()
                 msg = f"Succesfully added role {new_user_role.role.name} to user {new_user_role.user.first_name}"
             except IntegrityError as e:
                 print(f'Failed to add a UserRole, with error:{str(e)}')
@@ -76,17 +76,17 @@ def delete():
     """Delete will open a form to allow deletion of a UserRole object"""
     delete_user_role_form = DeleteUserRoleForm(request.form)
 
-    with Session(engine_staas) as cursor_staas:
+    with Session(engine) as cursor:
         # Select all Users to fill the form
-        users = cursor_staas.execute(select(User).order_by(User.email)).scalars()
+        users = cursor.execute(select(User).order_by(User.email)).scalars()
         delete_user_role_form.user_id.choices = [(u.id, u.email) for u in users]
 
         # Select all Roles to fill the form
-        roles = cursor_staas.execute(select(Role).order_by(Role.name)).scalars()
+        roles = cursor.execute(select(Role).order_by(Role.name)).scalars()
         delete_user_role_form.role_id.choices = [(r.id, r.name) for r in roles]
 
         if delete_user_role_form.validate_on_submit() and request.method == 'POST':
-            return delete_user_role_form.delete(cursor_staas)
+            return delete_user_role_form.delete(cursor)
 
     return render_template(
         'simple_form.html', form=delete_user_role_form,
