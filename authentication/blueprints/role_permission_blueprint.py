@@ -59,7 +59,7 @@ def create():
             try:
                 cursor.add(new_role_permission)
                 cursor.commit()
-                msg = f"Succesfully add permission {new_role_permission.role.name} " \
+                msg = f"Successfully add permission {new_role_permission.role.name} " \
                       f"to role {new_role_permission.permission.name}"
             except IntegrityError as e:
                 print(f'Failed to add a RolePermission, with error: {str(e)}')

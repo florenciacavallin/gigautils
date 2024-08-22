@@ -11,7 +11,6 @@ from sqlalchemy.exc import NoResultFound, IntegrityError
 
 user_blueprint = Blueprint('user_blueprint', __name__, url_prefix='/user')
 
-
 sidebar = [('Table Maintenance', [('User', '/table_maintenance/user'),
                                   ('User-Role', '/table_maintenance/user_role'),
                                   ('Role', '/table_maintenance/role'),
@@ -19,6 +18,7 @@ sidebar = [('Table Maintenance', [('User', '/table_maintenance/user'),
                                   ('Permission', '/table_maintenance/permission')]),
            ('User', [('Index', '/table_maintenance/user'),
                      ('Add', '/table_maintenance/user/create'),
+                     ('Edit', '/table_maintenance/user/edit'),
                      ('Delete', '/table_maintenance/user/delete')])]
 
 
@@ -30,9 +30,9 @@ def index():
     sqlalchemy_statement = select(User)
     columnname = ['User ID', 'First name', 'Last name', 'E-mail', 'Birthday', 'Valid Until', '']
     data = []
-    with Session(engine_staas) as cursor_staas:
-        for user in cursor_staas.execute(sqlalchemy_statement).scalars():
-            edit_button = Markup(f"<a class='w3-button w3-small w3-theme-d3 w3-round w3-hover-blue' "
+    with Session(engine) as cursor:
+        for user in cursor.execute(sqlalchemy_statement).scalars():
+            edit_button = Markup(f"<a class='w3-button w3-small w3-theme-d3 w3-round w3-theme-d5 (w3-theme-dark)' "
                                  f"href='/table_maintenance/user/edit/{user.id}'>Edit</a>")
             data.append([user.id, user.first_name, user.last_name, user.email, user.birthday,
                          user.valid_until, edit_button])
@@ -47,18 +47,18 @@ def create():
     user_form = UserForm(request.form)
 
     if user_form.validate_on_submit() and request.method == 'POST':
-        with Session(engine_staas) as cursor_staas:
+        with Session(engine) as cursor:
             new_user = user_form.create_user()
 
             try:
-                cursor_staas.add(new_user)
+                cursor.add(new_user)
                 # Flush to retrieve user id
-                cursor_staas.flush()
+                cursor.flush()
                 new_user_role = UserRole(user_id=new_user.id, role_id=1)
                 # Add default role to new created user
-                cursor_staas.add(new_user_role)
-                cursor_staas.commit()
-                msg = f"Succesfully created user {new_user.first_name} with ID {new_user.id}"
+                cursor.add(new_user_role)
+                cursor.commit()
+                msg = f"Successfully created user {new_user.first_name} with ID {new_user.id}"
             except IntegrityError as e:
                 print(f'Failed to add a User, with error: {str(e)}')
                 msg = f"User not created: It is likely it already exists, otherwise check the logs"
@@ -81,7 +81,7 @@ def edit(user_id=None):
     user_form = UserForm(request.form)
     sqlalchemy_statement = select(User).where(User.id == user_id)
 
-    with Session(engine_staas) as cursor:
+    with Session(engine) as cursor:
         try:
             user_to_edit = cursor.execute(sqlalchemy_statement).scalar_one()
         except NoResultFound:
@@ -96,7 +96,7 @@ def edit(user_id=None):
             cursor.add(user_to_edit)
             cursor.commit()
 
-            msg = f"Succesfully updated user {user_to_edit.first_name} with ID {user_to_edit.id}"
+            msg = f"Successfully updated user {user_to_edit.first_name} with ID {user_to_edit.id}"
             flash(msg)
             return redirect("/table_maintenance/user/index", code=302)
 
@@ -112,17 +112,18 @@ def delete():
     """Delete will open a form to allow deletion of the specified User object"""
     delete_user_form = DeleteUserForm(request.form)
 
-    with Session(engine_staas) as cursor_staas:
+    with Session(engine) as cursor:
         # Select all Users to fill the form
         sql_stmt = select(User).where(User.id.not_in(PROTECTED_USERS)).order_by(User.email)
-        users = cursor_staas.execute(sql_stmt).scalars()
+        users = cursor.execute(sql_stmt).scalars()
         delete_user_form.user_id.choices = [(u.id, u.email) for u in users]
 
         if delete_user_form.validate_on_submit() and request.method == 'POST':
-            return delete_user_form.delete(cursor_staas)
+            return delete_user_form.delete(cursor)
 
     return render_template(
         'simple_form.html', form=delete_user_form,
         submit_url=f'/table_maintenance/user/delete',
         title='Delete User', sidebar=sidebar
     )
+
