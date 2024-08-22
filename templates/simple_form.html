@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% block form %}
+    <form action="{{ submit_url }}" method="POST">
+        {{ form.hidden_tag() }}
+        {% for field in form %}
+            {% if field.widget.input_type != 'hidden' %}
+                <p class=w3-text-theme>{{ field.label }}</p>
+            {% endif %}
+            {{ field(class_="w3-input w3-round") }}
+        {% endfor %}
+    </form>
+    {% endblock %}
+{% endblock %}

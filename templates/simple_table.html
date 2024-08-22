@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table id="table_one" border=1 class='w3-table w3-striped w3-border w3-large'>
+    <thead>
+        <tr>
+        {% for item in columnname %}
+            <th class=w3-theme-l4>  {{item}} </th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for row in data %}
+        <tr>
+        {% for item in row %}
+            <td>
+                {{ item }}
+            </td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
