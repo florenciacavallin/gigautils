@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template
 
-from gigautils.authentication.authenticate import require_permission
-from gigautils.authentication.blueprints.user_blueprint import user_blueprint, sidebar as user_sidebar
-from gigautils.authentication.blueprints.role_blueprint import role_blueprint, sidebar as role_sidebar
-from gigautils.authentication.blueprints.permission_blueprint import permission_blueprint, sidebar as permission_sidebar
-from gigautils.authentication.blueprints.user_role_blueprint import user_role_blueprint, sidebar as user_role_sidebar
-from gigautils.authentication.blueprints.role_permission_blueprint import role_permission_blueprint, \
+from authentication.authenticate import require_permission
+from authentication.blueprints.user_blueprint import user_blueprint, sidebar as user_sidebar
+from authentication.blueprints.role_blueprint import role_blueprint, sidebar as role_sidebar
+from authentication.blueprints.permission_blueprint import permission_blueprint, sidebar as permission_sidebar
+from authentication.blueprints.user_role_blueprint import user_role_blueprint, sidebar as user_role_sidebar
+from authentication.blueprints.role_permission_blueprint import role_permission_blueprint, \
                                                                         sidebar as role_permission_sidebar
 
 

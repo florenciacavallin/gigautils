@@ -9,12 +9,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from gigautils.authentication.objects.Permission import Permission
-from gigautils.authentication.objects.User import User
-from gigautils.database.giga_engine import engine
+from authentication.objects.Permission import Permission
+from authentication.objects.User import User
+from database.giga_engine import engine
 from utils.request_helpers import redirect_url
 # Although this import is unused it allows sqlalchemy to find the foreignkey reference
-from gigautils.authentication.objects.Role import Role
+from authentication.objects.Role import Role
 
 # Copyright 2019 Google LLC All Rights Reserved.
 #

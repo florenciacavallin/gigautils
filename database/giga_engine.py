@@ -1,4 +1,4 @@
-from gigautils.database import giga_mysql, influx
+from database import giga_mysql, influx
 
 """
 The engine variable is created here, to be imported by other classes.

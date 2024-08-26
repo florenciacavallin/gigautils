@@ -1,10 +1,10 @@
 from flask import Blueprint, redirect, request, render_template, flash
 from markupsafe import Markup
-from gigautils.authentication.authenticate import require_permission
-from gigautils.authentication.objects.User import User, UserForm, DeleteUserForm, PROTECTED_USERS
-from gigautils.authentication.objects.UserRole import UserRole
+from authentication.authenticate import require_permission
+from authentication.objects.User import User, UserForm, DeleteUserForm, PROTECTED_USERS
+from authentication.objects.UserRole import UserRole
 from sqlalchemy import select
-from gigautils.database.giga_engine import engine
+from database.giga_engine import engine
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from wtforms import SelectField, SubmitField
 
-from gigautils.database.model import Base
+from database.model import Base
 
 PROTECTED_USER_ROLES = json.loads(os.environ.get('PROTECTED_USER_ROLES', '[]'))
 
