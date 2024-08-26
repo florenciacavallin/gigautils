@@ -1,11 +1,11 @@
 from flask import Blueprint, redirect, request, render_template, flash
 
-from gigautils.authentication.authenticate import require_permission
-from gigautils.authentication.objects.Role import Role, RoleForm, DeleteRoleForm, PROTECTED_ROLES
+from authentication.authenticate import require_permission
+from authentication.objects.Role import Role, RoleForm, DeleteRoleForm, PROTECTED_ROLES
 from markupsafe import Markup
 from sqlalchemy import select
 
-from gigautils.authentication.objects.RolePermission import RolePermission
+from authentication.objects.RolePermission import RolePermission
 from database.giga_engine import engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError

@@ -3,10 +3,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from gigautils.authentication.authenticate import require_permission
-from gigautils.authentication.objects.Permission import Permission
-from gigautils.authentication.objects.Role import Role
-from gigautils.authentication.objects.RolePermission import RolePermission, RolePermissionForm, DeleteRolePermissionForm
+from authentication.authenticate import require_permission
+from authentication.objects.Permission import Permission
+from authentication.objects.Role import Role
+from authentication.objects.RolePermission import RolePermission, RolePermissionForm, DeleteRolePermissionForm
 from database.giga_engine import engine
 
 role_permission_blueprint = Blueprint('role_permission_blueprint', __name__, url_prefix='/role_permission')

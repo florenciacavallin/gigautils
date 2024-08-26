@@ -12,7 +12,7 @@ from wtforms import StringField, DateField, SubmitField, SelectField
 
 from database.model import Base
 # Although this import is unused it allows sqlalchemy to find the foreignkey reference
-from gigautils.authentication.objects.UserRole import UserRole
+from authentication.objects.UserRole import UserRole
 
 PROTECTED_USERS = json.loads(os.environ.get('PROTECTED_USERS', '[]'))
 

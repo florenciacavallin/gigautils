@@ -2,8 +2,8 @@ from flask import Blueprint, redirect, request, render_template, flash
 from markupsafe import Markup
 from sqlalchemy.exc import NoResultFound, IntegrityError, ResourceClosedError
 from sqlalchemy.orm import Session
-from gigautils.authentication.authenticate import require_permission
-from gigautils.authentication.objects.Permission import Permission, PermissionForm, DeletePermissionForm, \
+from authentication.authenticate import require_permission
+from authentication.objects.Permission import Permission, PermissionForm, DeletePermissionForm, \
     PROTECTED_PERMISSIONS
 from sqlalchemy import select
 from database.giga_engine import engine
