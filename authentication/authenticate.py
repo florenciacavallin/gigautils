@@ -2,7 +2,7 @@ import json
 from functools import wraps
 
 import requests
-from flask import flash, redirect
+from flask import flash, request, redirect
 from google.auth.transport import requests as google_auth_requests
 from google.oauth2 import id_token
 from sqlalchemy import select
@@ -197,6 +197,7 @@ def verify_authentication_call(cursor, email: str, permission: str):
 
 
 def require_permission(permission: str,
+                       allowed_task_queues: tuple[str] = (),
                        allow_cron_job: bool = False, redirect_if_unauthorized: bool = True):
     """
     The require_permission method is a decorator usable for flask routes to check authentication
@@ -205,12 +206,16 @@ def require_permission(permission: str,
 
     :param permission: A string representing the permission the user must have to access the route
     :param allow_cron_job: A boolean that specifies if a cron job is allowed to access the route
+    :param allowed_task_queues: a list of names of app-engine task-queue that are allowed to access the route
     :param redirect_if_unauthorized: A boolean for if the user should be redirected (302) or 401 if authentication fails
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if allow_cron_job and check_cron_job():
+            if allow_cron_job and request.headers.get('X-Appengine-Cron', False) == 'true':
+                return func(*args, **kwargs)
+            if request.headers.get('X-Appengine-Queuename', ()) in allowed_task_queues:
                 return func(*args, **kwargs)
             # Check the authentication of the user
             with Session(engine) as cursor:
@@ -227,7 +232,9 @@ def require_permission(permission: str,
                 return redirect(redirect_url())
             else:
                 return json.dumps({'error': 'Authentication failed.'}), 401
+
         return wrapper
+
     return decorator
 
 
