@@ -1,18 +1,18 @@
 import json
 from functools import wraps
-import requests
 
+import requests
 from flask import flash, redirect
 from google.auth.transport import requests as google_auth_requests
 from google.oauth2 import id_token
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Session
 
 from gigautils.authentication.objects.Permission import Permission
 from gigautils.authentication.objects.User import User
 from database.giga_engine import engine
-from utils.blueprint_helper import redirect_url
+from utils.request_helpers import redirect_url
 # Although this import is unused it allows sqlalchemy to find the foreignkey reference
 from gigautils.authentication.objects.Role import Role
 
@@ -196,7 +196,8 @@ def verify_authentication_call(cursor, email: str, permission: str):
         raise AttributeError(f'User {email} was added to IAP but not to the database. {contact}')
 
 
-def require_permission(permission: str, allow_cron_job: bool = False, redirect_if_unauthorized: bool = True):
+def require_permission(permission: str,
+                       allow_cron_job: bool = False, redirect_if_unauthorized: bool = True):
     """
     The require_permission method is a decorator usable for flask routes to check authentication
         per route. It will show the route if check_auth(permission) is True or send the user
@@ -212,8 +213,8 @@ def require_permission(permission: str, allow_cron_job: bool = False, redirect_i
             if allow_cron_job and check_cron_job():
                 return func(*args, **kwargs)
             # Check the authentication of the user
-            with Session(engine_staas) as cursor_staas:
-                authorized = check_auth(cursor_staas, permission=permission)
+            with Session(engine) as cursor:
+                authorized = check_auth(cursor, permission=permission)
 
             if authorized:
                 # User is authenticated, allow the request to proceed
