@@ -50,11 +50,11 @@ class DeleteUserRoleForm(FlaskForm):
     role_id = SelectField('Role', coerce=int)
     submit = SubmitField('Delete')
 
-    def delete(self, cursor_staas: Session) -> redirect:
+    def delete(self, cursor: Session) -> redirect:
         """
         Delete UserRole from SQL based on flask form input
 
-        :param cursor_staas: Session connection to the MySQL database
+        :param cursor: Session connection to the MySQL database
         :return: redirects to /table_maintenance/user_role/index
         """
         user_role_to_be_deleted = [self.user_id.data, self.role_id.data]
@@ -67,18 +67,18 @@ class DeleteUserRoleForm(FlaskForm):
             (UserRole.role_id == self.role_id.data)
         )
         try:
-            user_role_to_delete = cursor_staas.execute(sql_statement).scalar_one()
+            user_role_to_delete = cursor.execute(sql_statement).scalar_one()
         except NoResultFound:
             flash(f'The UserRole with user ID {self.user_id.data} and '
                   f'role ID {self.role_id.data} does not exist')
             return redirect("/table_maintenance/user_role/index", code=302)
 
-        cursor_staas.delete(user_role_to_delete)
+        cursor.delete(user_role_to_delete)
         msg = f'Successfully deleted UserRole with user ID {self.user_id.data} and ' \
               f'role ID {self.role_id.data}'
 
         try:
-            cursor_staas.commit()
+            cursor.commit()
         except OperationalError:
             msg = f'MySQL error when deleting, please retry'
 

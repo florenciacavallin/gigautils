@@ -40,7 +40,7 @@ def index():
 
 
 @user_role_blueprint.route('/create', methods=['GET', 'POST'])
-@require_permission('admin')
+
 def create():
     """Create returns a form to create a user-role object"""
     user_role_form = UserRoleForm(request.form)
@@ -58,7 +58,7 @@ def create():
             try:
                 cursor.add(new_user_role)
                 cursor.commit()
-                msg = f"Succesfully added role {new_user_role.role.name} to user {new_user_role.user.first_name}"
+                msg = f"Successfully added role {new_user_role.role.name} to user {new_user_role.user.first_name}"
             except IntegrityError as e:
                 print(f'Failed to add a UserRole, with error:{str(e)}')
                 msg = f"UserRole not created: It is likely it already exists, otherwise check the logs"

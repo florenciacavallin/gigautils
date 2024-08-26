@@ -24,7 +24,7 @@ sidebar = [('Table Maintenance', [('User', '/table_maintenance/user'),
 
 @role_permission_blueprint.route('/')
 @role_permission_blueprint.route('/index')
-@require_permission('admin_read_only')
+
 def index():
     """Index returns an overview of all role-permission objects"""
     sqlalchemy_statement = select(RolePermission)

@@ -99,11 +99,11 @@ class DeleteUserForm(FlaskForm):
     user_id = SelectField('User', coerce=int)
     submit = SubmitField('Delete')
 
-    def delete(self, cursor_staas: Session) -> redirect:
+    def delete(self, cursor: Session) -> redirect:
         """
         Delete User from SQL based on flask form input
 
-        :param cursor_staas: Session connection to the MySQL database
+        :param cursor: Session connection to the MySQL database
         :return: redirects to /table_maintenance/user/index
         """
         if self.user_id.data in PROTECTED_USERS:
@@ -112,16 +112,16 @@ class DeleteUserForm(FlaskForm):
 
         sql_statement = select(User).where(User.id == self.user_id.data)
         try:
-            user_to_delete = cursor_staas.execute(sql_statement).scalar_one()
+            user_to_delete = cursor.execute(sql_statement).scalar_one()
         except NoResultFound:
             flash(f'The user with ID {self.user_id.data} does not exist')
             return redirect("/table_maintenance/user/index", code=302)
 
-        cursor_staas.delete(user_to_delete)
+        cursor.delete(user_to_delete)
         msg = f'Successfully deleted user {user_to_delete.first_name} with ID {user_to_delete.id}'
 
         try:
-            cursor_staas.commit()
+            cursor.commit()
         except OperationalError:
             msg = f'MySQL error when deleting, please retry'
 

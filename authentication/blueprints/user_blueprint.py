@@ -41,7 +41,6 @@ def index():
 
 
 @user_blueprint.route('/create', methods=['GET', 'POST'])
-@require_permission('admin')
 def create():
     """Create returns a form to create a user object"""
     user_form = UserForm(request.form)
@@ -72,7 +71,6 @@ def create():
 
 @user_blueprint.route('/edit/', methods=['GET', 'POST'])
 @user_blueprint.route('/edit/<int:user_id>', methods=['GET', 'POST'])
-@require_permission('admin')
 def edit(user_id=None):
     """Edit returns a form to edit a user object, will redirect to create form if no user is specified"""
     if user_id is None:

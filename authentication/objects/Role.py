@@ -86,11 +86,11 @@ class DeleteRoleForm(FlaskForm):
     role_id = SelectField('Role', coerce=int)
     submit = SubmitField('Delete')
 
-    def delete(self, cursor_staas: Session) -> redirect:
+    def delete(self, cursor: Session) -> redirect:
         """
         Delete Role from SQL based on flask form input
 
-        :param cursor_staas: Session connection to the MySQL database
+        :param cursor: Session connection to the MySQL database
         :return: redirects to /table_maintenance/role/index
         """
         if self.role_id.data in PROTECTED_ROLES:
@@ -99,16 +99,16 @@ class DeleteRoleForm(FlaskForm):
 
         sql_statement = select(Role).where(Role.id == self.role_id.data)
         try:
-            role_to_delete = cursor_staas.execute(sql_statement).scalar_one()
+            role_to_delete = cursor.execute(sql_statement).scalar_one()
         except NoResultFound:
             flash(f'The role with ID {self.role_id.data} does not exist')
             return redirect("/table_maintenance/role/index", code=302)
 
-        cursor_staas.delete(role_to_delete)
+        cursor.delete(role_to_delete)
         msg = f'Successfully deleted role {role_to_delete.name} with ID {role_to_delete.id}'
 
         try:
-            cursor_staas.commit()
+            cursor.commit()
         except OperationalError:
             msg = f'MySQL error when deleting, please retry'
 
