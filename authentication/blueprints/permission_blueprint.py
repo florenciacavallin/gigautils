@@ -6,7 +6,7 @@ from gigautils.authentication.authenticate import require_permission
 from gigautils.authentication.objects.Permission import Permission, PermissionForm, DeletePermissionForm, \
     PROTECTED_PERMISSIONS
 from sqlalchemy import select
-from gigautils.database.giga_engine import engine
+from database.giga_engine import engine
 
 permission_blueprint = Blueprint('permission_blueprint', __name__, url_prefix='/permission')
 

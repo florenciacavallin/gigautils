@@ -6,7 +6,7 @@ from markupsafe import Markup
 from sqlalchemy import select
 
 from gigautils.authentication.objects.RolePermission import RolePermission
-from gigautils.database.giga_engine import engine
+from database.giga_engine import engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
