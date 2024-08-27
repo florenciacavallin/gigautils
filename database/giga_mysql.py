@@ -6,11 +6,11 @@ import sqlalchemy
 from google.cloud.sql.connector import Connector
 from dotenv import load_dotenv
 
-# Take environment variables from .env if available
+# Take environment variables from .env if available.
 load_dotenv()
 
 
-def is_this_test_environment() -> bool:
+def is_this_test_environment(gcp_name: str) -> bool:
     """
     Checks if the current environment is the test environment.
     :return: a boolean which is True if the current environment is the test environment, False otherwise.
@@ -22,7 +22,7 @@ def is_this_test_environment() -> bool:
     # TODO only use the giga_bool_test_env here
     giga_bool_test_env = os.environ.get('GIGA_BOOL_TEST_ENV', 'True') == 'True'
 
-    if devshell is None and gcp == 'giga-energy-trade' and not giga_bool_test_env:
+    if devshell is None and gcp == gcp_name and not giga_bool_test_env:
         result = False
     elif not giga_bool_test_env:
         warnings.warn('GIGA_BOOL_TEST_ENV wants to connect to the PRD environment. '
@@ -75,7 +75,7 @@ def get_auth_params(bool_test_env: bool):
     return db_user, db_pass, instance_connection_name
 
 
-def init_remote_connection_engine(bool_test_env: bool, db_name: str = 'giga_energy_trade') -> sqlalchemy.engine:
+def init_remote_connection_engine(bool_test_env: bool, db_name: str) -> sqlalchemy.engine:
     """
     Initializes a remote database connection with the SQL database
     :param bool_test_env: connect to prd (False) or test (True) environment
@@ -83,6 +83,7 @@ def init_remote_connection_engine(bool_test_env: bool, db_name: str = 'giga_ener
 
     :return: engine responsible for sql database connections
     """
+
     # initialize Connector object
     connector = Connector()
     db_user, db_pass, instance_connection_name = get_auth_params(bool_test_env)
@@ -106,25 +107,28 @@ def init_remote_connection_engine(bool_test_env: bool, db_name: str = 'giga_ener
     return pool
 
 
-def init_connection_engine(bool_test_env: Optional[bool] = None) -> sqlalchemy.engine:
+def init_connection_engine(db_name: str, bool_test_env: Optional[bool] = None) -> sqlalchemy.engine:
     """
     Function that returns the correct connection engine for the current development environment.
     It checks if we are on cloudshell prd/test and returns the right connection engine if we are,
     and returns a remote connection engine if we are not in prd, enabling the usage of the same function
     for remote testing and prd.
+    Requires setting up a sql cloudproxy locally and setting default authentication using the gcloud cli.
     :param bool_test_env: test (True) or prd (False) environment, only used for remote connections
+    :param db_name: name of the database to connect to
     """
     if bool_test_env is None:
-        bool_test_env = is_this_test_environment()
+        bool_test_env = is_this_test_environment(db_name)
 
     make_remote_connection_bool = (os.environ.get('MAKE_REMOTE_CONNECTION', 'False') == 'True')
     if bool_test_env and make_remote_connection_bool:
-        return init_remote_connection_engine(bool_test_env=bool_test_env)
+        return init_remote_connection_engine(bool_test_env=bool_test_env,
+                                             db_name=db_name)
 
-    return init_unix_connection_engine(bool_test_env=bool_test_env)
+    return init_unix_connection_engine(bool_test_env=bool_test_env, db_name=db_name)
 
 
-def init_unix_connection_engine(db_name: str = 'giga_energy_trade', db_config: dict = None, bool_test_env=True):
+def init_unix_connection_engine(db_name: str, db_config: dict = None, bool_test_env=True):
     """
     initializes a connection running locally in the cloud
     :param bool_test_env: connect with test (True) or prd (False)
